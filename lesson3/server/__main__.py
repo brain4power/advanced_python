@@ -1,6 +1,7 @@
 import socket
 from yaml import load, Loader
 from argparse import ArgumentParser
+import json
 
 from settings import (
     ENCODING_NAME, HOST,
@@ -27,6 +28,18 @@ if args.config:
         encoding_name = config.get('encoding_name') or ENCODING_NAME
         buffersize = config.get('buffersize') or BUFFERSIZE
 
+
+def handler(data):
+    data = json.loads(data)
+    response = ''
+    if data['action'] == 'presence':
+        response = {
+            "response": 200,
+            "alert": "Необязательное сообщение/уведомление"
+        }
+    return json.dumps(response)
+
+
 try:
     sock = socket.socket()
     sock.bind((host, port))
@@ -36,7 +49,7 @@ try:
         client, address = sock.accept()
         print(f'Client detected {address}')
         data = client.recv(buffersize)
-        print(data.decode(encoding_name))
-        client.send(data)
+        # print(data.decode(encoding_name))
+        client.send(handler(data.decode(encoding_name)).encode(encoding_name))
 except KeyboardInterrupt:
     print('Server closed')

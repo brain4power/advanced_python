@@ -1,6 +1,8 @@
 import socket
 from yaml import load, Loader
 from argparse import ArgumentParser
+from time import time
+import json
 
 from settings import (
     ENCODING_NAME, HOST,
@@ -27,10 +29,21 @@ if args.config:
         encoding_name = config.get('encoding_name') or ENCODING_NAME
         buffersize = config.get('buffersize') or BUFFERSIZE
 
+
+def send_presence():
+    presense = {
+        "action": "presence",
+        "time": time(),
+        "type": "status",
+    }
+    return json.dumps(presense).encode(encoding_name)
+
+
 try:
     sock = socket.socket()
     sock.connect((host, port))
     print(f'Client started with {host}:{port}')
+    sock.send(send_presence())
     while True:
         value = input('Enter data to send:')
         bvalue = value.encode(encoding_name)
