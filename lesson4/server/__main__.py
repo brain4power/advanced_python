@@ -44,19 +44,12 @@ try:
     client, address = sock.accept()
     print(f'Client detected { address }')
     while True:
-        print('start loop')
-
         b_request = client.recv(buffersize)
-        print('b_req=', b_request)
-        print('enco_name=', encoding_name)
         en_data = b_request.decode(encoding_name)
-        print('en_data=', en_data)
         req = json.loads(en_data)
-        print('req=', req)
         request = json.loads(
             b_request.decode(encoding_name)
         )
-        print('request=', request)
         action_name = request.get('action')
 
         if validate_request(request):

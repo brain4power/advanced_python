@@ -40,7 +40,6 @@ try:
     sock.connect((host, port))
     print(f'Client started with { host }:{ port }')
     while True:
-        print('start loop')
         value = input('Enter data to send:')
         response = {
             'action': 'echo',
@@ -49,11 +48,8 @@ try:
         }
         s_response = json.dumps(response)
         b_response = s_response.encode(encoding_name)
-        print('b_resp=', b_response)
         sock.send(b_response)
-        print('sock sended')
         data = sock.recv(buffersize)
-        print('data_recv=', data)
         print(data.decode(encoding_name))
 except KeyboardInterrupt:
     print('Client closed')
