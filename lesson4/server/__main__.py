@@ -45,11 +45,16 @@ try:
         client, address = sock.accept()
         print(f'Client detected { address }')
         b_request = client.recv(buffersize)
-
+        print('b_req=', b_request)
+        print('enco_name=', encoding_name)
+        en_data = b_request.decode(encoding_name)
+        print('en_data=', en_data)
+        req = json.loads(en_data)
+        print('req=', req)
         request = json.loads(
-            b_request.decode(ENCODING_NAME)
+            b_request.decode(encoding_name)
         )
-
+        print('request=', request)
         action_name = request.get('action')
 
         if validate_request(request):
@@ -58,7 +63,7 @@ try:
                 try:
                     response = controller(request)
                 except Exception as err:
-                    print(err)
+                    print('err=', err)
                     response = make_response(
                         request, 500, 'Internal server error'
                     )
@@ -70,7 +75,7 @@ try:
             response = make_400(request)
             
         s_response = json.dumps(response)
-        client.send(s_response.encode(ENCODING_NAME))
+        client.send(s_response.encode(encoding_name))
         
 except KeyboardInterrupt:
     print('Client closed')

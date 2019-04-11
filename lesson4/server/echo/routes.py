@@ -3,5 +3,5 @@ from .controller import (
 )
 
 routes = [
-    {'echo': 'now', 'controller': get_echo}
+    {'action': 'echo', 'controller': get_echo}
 ]

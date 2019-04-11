@@ -20,7 +20,7 @@ def get_server_routes():
 
 def resolve(action, routes=None):
     routes_mapping = {
-        route[0]['action']: route[0]['controller']
+        route['action']: routes['controller']
         for route in routes or get_server_routes()
     }
     return routes_mapping.get(action, None)

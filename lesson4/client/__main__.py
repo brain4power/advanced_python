@@ -1,7 +1,14 @@
+from datetime import datetime
+import json
 import socket
 from yaml import load, Loader
 from argparse import ArgumentParser
 
+from routes import resolve
+from protocol import (
+    validate_request, make_response,
+    make_400, make_404
+)
 from settings import (
     ENCODING_NAME, VARIABLE, HOST,
     PORT, BUFFERSIZE
@@ -30,13 +37,19 @@ if args.config:
 
 try:
     sock = socket.socket()
-    sock.connect((HOST, PORT))
-    print(f'Client started with { HOST }:{ PORT }')
+    sock.connect((host, port))
+    print(f'Client started with { host }:{ port }')
     while True:
         value = input('Enter data to send:')
-        bvalue = value.encode(ENCODING_NAME)
-        sock.send(bvalue)
-        data = sock.recv(BUFFERSIZE)
-        print(data.decode(ENCODING_NAME))
+        response = {
+            'action': 'echo',
+            'time': datetime.now().timestamp(),
+            'data': value
+        }
+        s_response = json.dumps(response)
+        b_response = s_response.encode(encoding_name)
+        sock.send(b_response)
+        data = sock.recv(buffersize)
+        print(data.decode(encoding_name))
 except KeyboardInterrupt:
     print('Client closed')
