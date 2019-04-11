@@ -41,9 +41,11 @@ try:
     sock.bind((host, port))
     sock.listen(5)
     print(f'Server started with { host }:{ port }')
+    client, address = sock.accept()
+    print(f'Client detected { address }')
     while True:
-        client, address = sock.accept()
-        print(f'Client detected { address }')
+        print('start loop')
+
         b_request = client.recv(buffersize)
         print('b_req=', b_request)
         print('enco_name=', encoding_name)
@@ -76,6 +78,7 @@ try:
             
         s_response = json.dumps(response)
         client.send(s_response.encode(encoding_name))
+        print('server send:', s_response.encode(encoding_name))
         
 except KeyboardInterrupt:
     print('Client closed')
