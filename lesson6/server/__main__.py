@@ -38,27 +38,26 @@ if args.config:
         encoding_name = config.get('encoding_name') or ENCODING_NAME
         buffersize = config.get('buffersize') or BUFFERSIZE
 
-logger = logging.getLogger('main')
 handler = logging.FileHandler('main.log', encoding=encoding_name)
 error_handler = logging.FileHandler('error.log', encoding=encoding_name)
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 
-handler.setLevel(logging.DEBUG)
-error_handler.setLevel(logging.ERROR)
-handler.setFormatter(formatter)
-error_handler.setFormatter(formatter)
-
-logger.setLevel(logging.DEBUG)
-logger.addHandler(handler)
-logger.addHandler(error_handler)
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        handler,
+        error_handler,
+        logging.StreamHandler(),
+    ]
+)
 
 try:
     sock = socket.socket()
     sock.bind((host, port))
     sock.listen(5)
-    logger.info(f'Server started with { host }:{ port }')
+    logging.info(f'Server started with { host }:{ port }')
     client, address = sock.accept()
-    logger.info(f'Client detected { address }')
+    logging.info(f'Client detected { address }')
     while True:
         b_request = client.recv(buffersize)
         en_data = b_request.decode(encoding_name)
@@ -75,19 +74,19 @@ try:
                     response = controller(request)
 
                     if response.get('code') != 200:
-                        logger.error(f'Request is not valid')
+                        logging.error(f'Request is not valid')
                     else:
-                        logger.info(f'Function { controller.__name__ } was called')
+                        logging.info(f'Function { controller.__name__ } was called')
                 except Exception as err:
-                    logger.critical(err)
+                    logging.critical(err, exec_info=True)
                     response = make_response(
                         request, 500, 'Internal server error'
                     )
             else:
-                logger.error(f'Action { action_name } does not exits')
+                logging.error(f'Action { action_name } does not exits')
                 response = make_404(request)
         else:
-            logger.error(f'Request is not valid')
+            logging.error(f'Request is not valid')
             response = make_400(request)
             
         s_response = json.dumps(response)
@@ -95,4 +94,4 @@ try:
         client.send(s_response.encode(encoding_name))
         
 except KeyboardInterrupt:
-    logger.info('Client closed')
+    logging.info('Client closed')

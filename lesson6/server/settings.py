@@ -5,5 +5,6 @@ PORT = 8009
 
 INSTALLED_MODULES = [
     'dates',
-    'echo'
+    'echo',
+    'exception',
 ]
