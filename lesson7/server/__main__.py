@@ -1,22 +1,18 @@
 import json
 import socket
+import select
 import logging
 
 from yaml import load, Loader
 from argparse import ArgumentParser
 
+from handlers import handle_default_request
 import settings
 
-from routes import resolve
-from protocol import (
-    validate_request, make_response,
-    make_400, make_404
-)
 from settings import (
     ENCODING_NAME, HOST,
     PORT, BUFFERSIZE
 )
-
 
 host = HOST
 port = PORT
@@ -51,47 +47,38 @@ logging.basicConfig(
     ]
 )
 
+requests = []
+connections = []
+
 try:
     sock = socket.socket()
     sock.bind((host, port))
+    sock.settimeout(0)
     sock.listen(5)
     logging.info(f'Server started with { host }:{ port }')
-    client, address = sock.accept()
-    logging.info(f'Client detected { address }')
+
     while True:
-        b_request = client.recv(buffersize)
-        en_data = b_request.decode(encoding_name)
-        req = json.loads(en_data)
-        request = json.loads(
-            b_request.decode(encoding_name)
+        try:
+            client, address = sock.accept()
+            logging.info(f'Client detected { address }')
+            connections.append(client)
+        except Exception:
+            pass
+
+        rlist, wlist, xlist = select.select(
+            connections, connections, connections, 0
         )
-        action_name = request.get('action')
 
-        if validate_request(request):
-            controller = resolve(action_name)
-            if controller:
-                try:
-                    response = controller(request)
+        for w_client in rlist:
+            b_request = w_client.recv(buffersize)
+            requests.append(b_request)
 
-                    if response.get('code') != 200:
-                        logging.error(f'Request is not valid')
-                    else:
-                        logging.info(f'Function { controller.__name__ } was called')
-                except Exception as err:
-                    logging.critical(err, exec_info=True)
-                    response = make_response(
-                        request, 500, 'Internal server error'
-                    )
-            else:
-                logging.error(f'Action { action_name } does not exits')
-                response = make_404(request)
-        else:
-            logging.error(f'Request is not valid')
-            response = make_400(request)
-            
-        s_response = json.dumps(response)
-        client.send(s_response.encode(encoding_name))
-        client.send(s_response.encode(encoding_name))
+        if requests:
+            b_request = requests.pop()
+            b_response = handle_default_request(b_request)
+
+            for r_client in wlist:
+                r_client.send(b_response)
         
 except KeyboardInterrupt:
     logging.info('Client closed')

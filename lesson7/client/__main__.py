@@ -25,6 +25,9 @@ parser.add_argument(
     '-c', '--config', type=str,
     help='Sets run configuration'
 )
+parser.add_argument(
+    '-m', '--mode', type=str, default='w'
+)
 args = parser.parse_args()
 
 if args.config:
@@ -39,17 +42,23 @@ try:
     sock = socket.socket()
     sock.connect((host, port))
     print(f'Client started with { host }:{ port }')
-    while True:
-        value = input('Enter data to send:')
-        response = {
-            'action': 'echo',
-            'time': datetime.now().timestamp(),
-            'data': value
-        }
-        s_response = json.dumps(response)
-        b_response = s_response.encode(encoding_name)
-        sock.send(b_response)
-        data = sock.recv(buffersize)
-        print(data.decode(encoding_name))
+
+    if args.mode == 'w':
+
+        while True:
+            value = input('Enter data to send:')
+            response = {
+                'action': 'echo',
+                'time': datetime.now().timestamp(),
+                'data': value
+            }
+            s_response = json.dumps(response)
+            b_response = s_response.encode(encoding_name)
+            sock.send(b_response)
+
+    else:
+        while True:
+            data = sock.recv(buffersize)
+            print(data.decode(encoding_name))
 except KeyboardInterrupt:
     print('Client closed')
